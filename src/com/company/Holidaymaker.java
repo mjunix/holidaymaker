@@ -4,9 +4,9 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class Holidaymaker {
-    ResultSet resultSet;
-    PreparedStatement statement;
-    Connection conn;
+    private ResultSet resultSet;
+    private PreparedStatement statement;
+    private Connection conn;
     private Scanner scanner = new Scanner(System.in);
 
     public Holidaymaker() throws SQLException {
