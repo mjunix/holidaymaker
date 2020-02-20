@@ -43,5 +43,41 @@ public class Holidaymaker {
     }
 
     private void registerCustomer() {
+        // name
+        System.out.print("Name: ");
+        String name = scanner.nextLine();
+
+        // email
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+
+        // phone
+        System.out.print("Phone: ");
+        String phone = scanner.nextLine();
+
+        // address
+        System.out.print("Address: ");
+        String address = scanner.nextLine();
+
+        // city
+        System.out.print("City: ");
+        String city = scanner.nextLine();
+
+        // country
+        System.out.print("Country: ");
+        String country = scanner.nextLine();
+
+        try {
+            statement = conn.prepareStatement("INSERT INTO customers (name, email, phone, address, city, country) VALUES (?, ?, ?, ?, ?, ?)");
+            statement.setString(1, name);
+            statement.setString(2, email);
+            statement.setString(3, phone);
+            statement.setString(4, address);
+            statement.setString(5, city);
+            statement.setString(6, country);
+            statement.executeUpdate();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }
