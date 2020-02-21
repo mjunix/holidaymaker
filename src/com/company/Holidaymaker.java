@@ -75,7 +75,11 @@ public class Holidaymaker {
             statement.setString(4, address);
             statement.setString(5, city);
             statement.setString(6, country);
-            statement.executeUpdate();
+            int rows = statement.executeUpdate();
+
+            if(rows == 1) {
+                System.out.println("Regristered customer successfully!");
+            }
         } catch(Exception e) {
             e.printStackTrace();
         }
