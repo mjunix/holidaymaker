@@ -67,22 +67,22 @@ public class Holidaymaker {
         }
 
         // get start-date and end-date
-        Date startDate = null, endDate = null;
+        Date bookingStartDate = null, bookingEndDate = null;
         while(true) {
             try {
                 System.out.println("Start date and end date of your booking...");
                 System.out.print("Enter start date (yyyy-mm-dd): ");
-                startDate = Date.valueOf(scanner.nextLine());
+                bookingStartDate = Date.valueOf(scanner.nextLine());
 
                 System.out.print("Enter end date (yyyy-mm-dd): ");
-                endDate = Date.valueOf(scanner.nextLine());
+                bookingEndDate = Date.valueOf(scanner.nextLine());
             }
             catch(IllegalArgumentException e) {
                 System.out.println("ERROR: Date was invalid or incorrect format! Try again!");
                 continue;
             }
 
-            if(startDate.equals(endDate) || startDate.after(endDate)) {
+            if(bookingStartDate.equals(bookingEndDate) || bookingStartDate.after(bookingEndDate)) {
                 System.out.println("ERROR: Start date must be before end date! Try again");
                 continue;
             }
@@ -90,13 +90,13 @@ public class Holidaymaker {
             break;
         }
 
-        // TODO: Insert into bookings-table, and get insertId back
+        // create booking
         int thisBookingId = -1;
         try {
             statement = conn.prepareStatement("INSERT INTO bookings (start_date, end_date, customer) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 
-            statement.setDate(1, startDate);
-            statement.setDate(2, endDate);
+            statement.setDate(1, bookingStartDate);
+            statement.setDate(2, bookingEndDate);
             statement.setInt(3, customerId);
 
             statement.executeUpdate();
@@ -129,7 +129,6 @@ public class Holidaymaker {
         int hotelId = -1;
 
         // choose hotel
-        while(true) { // TODO: remove this while
             try {
                 System.out.println("Hotels:");
                 statement = conn.prepareStatement("SELECT id, name FROM hotels WHERE facility_profile=?");
@@ -143,22 +142,30 @@ public class Holidaymaker {
                 System.out.print("Enter hotel id: ");
                 hotelId = Integer.parseInt(scanner.nextLine());
                 // TODO: check if hotelId is valid
-                break;
             }
             catch(Exception e) {
                 e.printStackTrace();
                 return;
             }
-        }
+
 
         // choose room
         while (true) {
-            System.out.println("Rooms:");
-            resultSet = getAllRoomsInHotel(hotelId);
+            System.out.println("\nRoom reservation...");
+            System.out.print("How many people will stay in the room (or zero to quit): ");
+            int roomSize = Integer.parseInt(scanner.nextLine());
+
+            System.out.println("Available rooms:");
+            resultSet = getAvailableRoomsInHotel(hotelId, bookingStartDate, bookingEndDate, roomSize);
             try {
-                while (resultSet.next()) {
-                    System.out.println(resultSet.getInt("room_id") + ". Room_number:" + resultSet.getInt("room_number") + " " + resultSet.getString("designation") + " " + resultSet.getInt("hotel"));
+                if(!resultSet.next()) {
+                    System.out.println("There are no available rooms that matches your criteria! Try again!");
+                    continue;
                 }
+
+                do {
+                    System.out.println(resultSet.getInt("id") + ". Room_number:" + resultSet.getInt("room_number") + " " + resultSet.getString("designation") + " " + resultSet.getInt("hotel"));
+                } while (resultSet.next());
             }
             catch(Exception e) {
                 e.printStackTrace();
@@ -168,7 +175,6 @@ public class Holidaymaker {
             System.out.print("Enter id of room to book: ");
             int roomId = Integer.parseInt(scanner.nextLine());
 
-            // TODO: Insert into room_reservations...
             try {
                 statement = conn.prepareStatement("INSERT INTO room_reservations (room, booking) VALUES (?, ?)");
                 statement.setInt(1, roomId);
@@ -189,15 +195,39 @@ public class Holidaymaker {
             }
         } // end while (room reservations)
 
+        // if no room reservations were made, delete booking
+        try {
+            statement = conn.prepareStatement("SELECT COUNT(*) AS num_room_reservations FROM room_reservations WHERE booking=?");
+            statement.setInt(1, thisBookingId);
+            resultSet = statement.executeQuery();
+            resultSet.next();
+
+            int num_room_reservations = resultSet.getInt("num_room_reservations");
+
+            if(num_room_reservations == 0){
+                statement = conn.prepareStatement("DELETE FROM bookings WHERE id=?");
+                statement.setInt(1, thisBookingId);
+                statement.executeUpdate();
+                System.out.println("(Deleted booking since no room reservations were made.)");
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private Resultset getAvailableRoomsInHotel(int hotelId, Date filterStartDate, Date filterEndDate, int roomSize) {
+    private ResultSet getAvailableRoomsInHotel(int hotelId, Date bookingStartDate, Date bookingEndDate, int roomSize) {
         try {
-            "SELECT * FROM bookings, room_reservations, rooms, room_types " +
-                    "WHERE bookings.id = room_reservations.booking AND room_reservations.room = rooms.id AND rooms.room_type = room_types.id AND room_types.hotel=? " +
-                    "AND max_num_guests=? " + /* allow fewer guests than maximum capacity? */
-                    "AND (? NOT BETWEEN start_date AND end_date) AND (? NOT BETWEEN start_date AND end_date) " +
-                    "AND NOT (? < start_date AND ? > end_date)"
+            statement = conn.prepareStatement(
+            "SELECT * FROM room_reservations_with_dates RIGHT JOIN rooms_with_room_types ON room_id=id " +
+                    "WHERE hotel = ? AND max_num_guests=? " +
+                    "AND ((start_date IS NULL AND end_date IS NULL) OR (NOT (? < end_date AND ? > start_date)))");
+                     /* https://stackoverflow.com/questions/2545947/ */
+            statement.setInt(1, hotelId);
+            statement.setInt(2, roomSize);
+            statement.setDate(3, bookingStartDate);
+            statement.setDate(4, bookingEndDate);
+            return statement.executeQuery();
         }
         catch(Exception e) {
             e.printStackTrace();
