@@ -246,32 +246,6 @@ public class Holidaymaker {
         }
     }
 
-    private ResultSet getAllRoomsInHotel(int hotelId) {
-        try {
-            statement = conn.prepareStatement("SELECT rooms.id AS room_id, rooms.room_number AS room_number, room_types.designation, room_types.hotel FROM rooms, room_types " +
-                    "WHERE rooms.room_type = room_types.id AND room_types.hotel=?");
-            statement.setInt(1, hotelId);
-            return statement.executeQuery();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private ResultSet getAllRoomBookingsInHotel(int hotelId) {
-        try {
-            statement = conn.prepareStatement("SELECT * FROM bookings, room_reservations, rooms, room_types " +
-                    "WHERE bookings.id = room_reservations.booking AND room_reservations.room = rooms.id AND rooms.room_type = room_types.id AND room_types.hotel=?");
-            statement.setInt(1, hotelId);
-            return statement.executeQuery();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     private int findCustomerIdFromEmail(String email) {
         try {
             statement = conn.prepareStatement("SELECT id FROM customers WHERE email = ?");
