@@ -3,8 +3,6 @@ package com.company;
 // TODO: ta bort while-loopar?
 // TODO: lägg in start_date/end_date i room_reservation?
 
-import com.mysql.cj.protocol.Resultset;
-
 import java.sql.*;
 import java.util.Scanner;
 
@@ -12,7 +10,7 @@ public class Holidaymaker {
     private ResultSet resultSet;
     private PreparedStatement statement;
     private Connection conn;
-    private Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in);
 
     public Holidaymaker() throws SQLException {
         conn = DriverManager.getConnection("jdbc:mysql://localhost/holidaymaker?user=root&password=toor&serverTimezone=CET");
@@ -187,10 +185,7 @@ public class Holidaymaker {
             }
 
             System.out.print("Do you want to book another room? [y/n]: ");
-            if(scanner.nextLine().trim().toLowerCase().equals("y")) {
-                continue;
-            }
-            else {
+            if(!scanner.nextLine().trim().toLowerCase().equals("y")) {
                 break;
             }
         } // end while (room reservations)
