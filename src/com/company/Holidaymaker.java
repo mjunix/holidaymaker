@@ -22,6 +22,7 @@ public class Holidaymaker {
             System.out.println("\nMain menu:");
             System.out.println("1. Register customer");
             System.out.println("2. Make reservation");
+            System.out.println("3. Delete reservation");
             System.out.println("0. Exit");
             System.out.print("Choice: ");
 
@@ -34,12 +35,18 @@ public class Holidaymaker {
                 case 2:
                     makeReservation();
                     break;
+                case 3:
+                    deleteReservation();
+                    break;
                 case 0:
                     return;
                 default:
                     System.out.println("Unknown choice, try again!");
             }
         }
+    }
+
+    private void deleteReservation() {
     }
 
     private void makeReservation() {
