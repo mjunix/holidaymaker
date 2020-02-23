@@ -356,4 +356,17 @@ public class Holidaymaker {
             e.printStackTrace();
         }
     }
+
+    private int getIntegerFromUser(String prompt) {
+        while(true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine();
+            try {
+                return Integer.parseInt(input);
+            }
+            catch(NumberFormatException e) {
+                System.out.println("ERROR: \"" + input  +"\" is not a valid integer! Try again!");
+            }
+        }
+    }
 }
