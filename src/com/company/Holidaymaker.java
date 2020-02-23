@@ -1,18 +1,14 @@
 package com.company;
 
-// TODO: ta bort while-loopar?
-// TODO: lägg in start_date/end_date i room_reservation?
-
-import com.mysql.cj.protocol.Resultset;
-
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 public class Holidaymaker {
     private ResultSet resultSet;
     private PreparedStatement statement;
     private Connection conn;
-    private Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in);
 
     public Holidaymaker() throws SQLException {
         conn = DriverManager.getConnection("jdbc:mysql://localhost/holidaymaker?user=root&password=toor&serverTimezone=CET");
@@ -24,6 +20,7 @@ public class Holidaymaker {
             System.out.println("\nMain menu:");
             System.out.println("1. Register customer");
             System.out.println("2. Make reservation");
+            System.out.println("3. Delete reservation");
             System.out.println("0. Exit");
             System.out.print("Choice: ");
 
@@ -36,11 +33,66 @@ public class Holidaymaker {
                 case 2:
                     makeReservation();
                     break;
+                case 3:
+                    deleteReservation();
+                    break;
                 case 0:
                     return;
                 default:
                     System.out.println("Unknown choice, try again!");
             }
+        }
+    }
+
+    private void deleteReservation() {
+        int customerId = -1;
+
+        // find customer id
+        while(true) {
+            System.out.print("Enter email of customer or empty string to quit: ");
+            String email = scanner.nextLine().trim();
+
+            if(email.isBlank()) {
+                return;
+            }
+
+            customerId = findCustomerIdFromEmail(email);
+
+            if(customerId != -1) {
+                break;
+            }
+            else {
+                System.out.println("No customer found with that email! Try again!");
+            }
+        }
+
+        try {
+            statement = conn.prepareStatement("SELECT * FROM reservations WHERE customer=? AND start_date >= CURDATE()");
+            statement.setInt(1, customerId);
+            resultSet = statement.executeQuery();
+
+            if(!resultSet.next()) {
+                System.out.println("No reservations can be deleted for this user!");
+                return;
+            }
+
+            System.out.println("Reservations:");
+
+            do {
+                System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date"));
+            } while(resultSet.next());
+
+            System.out.print("Enter id of reservation to delete: ");
+
+            int reservationId = Integer.parseInt(scanner.nextLine());
+
+            statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
+            statement.setInt(1, reservationId);
+            statement.executeUpdate();
+            System.out.println("Deleted reservation");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -74,6 +126,11 @@ public class Holidaymaker {
                 System.out.print("Enter start date (yyyy-mm-dd): ");
                 bookingStartDate = Date.valueOf(scanner.nextLine());
 
+                if(bookingStartDate.before(Date.valueOf(LocalDate.now()))) {
+                    System.out.println("ERROR: Start date cannot be in the past! Try again!");
+                    continue;
+                }
+
                 System.out.print("Enter end date (yyyy-mm-dd): ");
                 bookingEndDate = Date.valueOf(scanner.nextLine());
             }
@@ -93,7 +150,7 @@ public class Holidaymaker {
         // create booking
         int thisBookingId = -1;
         try {
-            statement = conn.prepareStatement("INSERT INTO bookings (start_date, end_date, customer) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            statement = conn.prepareStatement("INSERT INTO reservations (start_date, end_date, customer) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 
             statement.setDate(1, bookingStartDate);
             statement.setDate(2, bookingEndDate);
@@ -176,7 +233,7 @@ public class Holidaymaker {
             int roomId = Integer.parseInt(scanner.nextLine());
 
             try {
-                statement = conn.prepareStatement("INSERT INTO room_reservations (room, booking) VALUES (?, ?)");
+                statement = conn.prepareStatement("INSERT INTO room_reservations (room, reservation) VALUES (?, ?)");
                 statement.setInt(1, roomId);
                 statement.setInt(2, thisBookingId);
                 statement.executeUpdate();
@@ -187,17 +244,14 @@ public class Holidaymaker {
             }
 
             System.out.print("Do you want to book another room? [y/n]: ");
-            if(scanner.nextLine().trim().toLowerCase().equals("y")) {
-                continue;
-            }
-            else {
+            if(!scanner.nextLine().trim().toLowerCase().equals("y")) {
                 break;
             }
         } // end while (room reservations)
 
         // if no room reservations were made, delete booking
         try {
-            statement = conn.prepareStatement("SELECT COUNT(*) AS num_room_reservations FROM room_reservations WHERE booking=?");
+            statement = conn.prepareStatement("SELECT COUNT(*) AS num_room_reservations FROM room_reservations WHERE reservation=?");
             statement.setInt(1, thisBookingId);
             resultSet = statement.executeQuery();
             resultSet.next();
@@ -205,7 +259,7 @@ public class Holidaymaker {
             int num_room_reservations = resultSet.getInt("num_room_reservations");
 
             if(num_room_reservations == 0){
-                statement = conn.prepareStatement("DELETE FROM bookings WHERE id=?");
+                statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
                 statement.setInt(1, thisBookingId);
                 statement.executeUpdate();
                 System.out.println("(Deleted booking since no room reservations were made.)");
@@ -238,32 +292,6 @@ public class Holidaymaker {
     private ResultSet getAllHotelProfiles() {
         try {
             statement = conn.prepareStatement("SELECT facility_profiles.id, CONCAT('pool:', facility_profiles.pool, ' evening_entertainment:', facility_profiles.evening_entertainment, ' kids_club:', facility_profiles.kids_club, ' restaurant:', facility_profiles.restaurant) AS profile_string FROM facility_profiles");
-            return statement.executeQuery();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private ResultSet getAllRoomsInHotel(int hotelId) {
-        try {
-            statement = conn.prepareStatement("SELECT rooms.id AS room_id, rooms.room_number AS room_number, room_types.designation, room_types.hotel FROM rooms, room_types " +
-                    "WHERE rooms.room_type = room_types.id AND room_types.hotel=?");
-            statement.setInt(1, hotelId);
-            return statement.executeQuery();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private ResultSet getAllRoomBookingsInHotel(int hotelId) {
-        try {
-            statement = conn.prepareStatement("SELECT * FROM bookings, room_reservations, rooms, room_types " +
-                    "WHERE bookings.id = room_reservations.booking AND room_reservations.room = rooms.id AND rooms.room_type = room_types.id AND room_types.hotel=?");
-            statement.setInt(1, hotelId);
             return statement.executeQuery();
         }
         catch(Exception e) {
@@ -322,7 +350,7 @@ public class Holidaymaker {
             int rows = statement.executeUpdate();
 
             if(rows == 1) {
-                System.out.println("Regristered customer successfully!");
+                System.out.println("Registered customer successfully!");
             }
         } catch(Exception e) {
             e.printStackTrace();
