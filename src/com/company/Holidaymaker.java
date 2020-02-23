@@ -22,9 +22,8 @@ public class Holidaymaker {
             System.out.println("2. Make reservation");
             System.out.println("3. Delete reservation");
             System.out.println("0. Exit");
-            System.out.print("Choice: ");
 
-            int choice = Integer.parseInt(scanner.nextLine());
+            int choice = getIntegerFromUser("Choice: ");
 
             switch (choice) {
                 case 1:
@@ -82,9 +81,7 @@ public class Holidaymaker {
                 System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date"));
             } while(resultSet.next());
 
-            System.out.print("Enter id of reservation to delete: ");
-
-            int reservationId = Integer.parseInt(scanner.nextLine());
+            int reservationId = getIntegerFromUser("Enter id of reservation to delete: ");
 
             statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
             statement.setInt(1, reservationId);
@@ -175,8 +172,8 @@ public class Holidaymaker {
             while (resultSet.next()) {
                 System.out.println(resultSet.getInt("id") + ". " + resultSet.getString("profile_string"));
             }
-            System.out.print("Enter profile id: ");
-            facilityProfileId = Integer.parseInt(scanner.nextLine());
+
+            facilityProfileId = getIntegerFromUser("Enter profile id: ");
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -196,8 +193,7 @@ public class Holidaymaker {
                     System.out.println(resultSet.getInt("id") + ". " + resultSet.getString("name"));
                 }
 
-                System.out.print("Enter hotel id: ");
-                hotelId = Integer.parseInt(scanner.nextLine());
+                hotelId = getIntegerFromUser("Enter hotel id: ");
                 // TODO: check if hotelId is valid
             }
             catch(Exception e) {
@@ -209,8 +205,7 @@ public class Holidaymaker {
         // choose room
         while (true) {
             System.out.println("\nRoom reservation...");
-            System.out.print("How many people will stay in the room (or zero to quit): ");
-            int roomSize = Integer.parseInt(scanner.nextLine());
+            int roomSize = getIntegerFromUser("How many people will stay in the room (or zero to quit): ");
 
             System.out.println("Available rooms:");
             resultSet = getAvailableRoomsInHotel(hotelId, bookingStartDate, bookingEndDate, roomSize);
@@ -229,8 +224,7 @@ public class Holidaymaker {
                 return;
             }
 
-            System.out.print("Enter id of room to book: ");
-            int roomId = Integer.parseInt(scanner.nextLine());
+            int roomId = getIntegerFromUser("Enter id of room to book: ");
 
             try {
                 statement = conn.prepareStatement("INSERT INTO room_reservations (room, reservation) VALUES (?, ?)");
