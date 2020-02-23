@@ -289,7 +289,7 @@ public class Holidaymaker {
 
     private ResultSet getAllHotelProfiles() {
         try {
-            statement = conn.prepareStatement("SELECT facility_profiles.id, CONCAT('pool:', facility_profiles.pool, ' evening_entertainment:', facility_profiles.evening_entertainment, ' kids_club:', facility_profiles.kids_club, ' restaurant:', facility_profiles.restaurant) AS profile_string FROM facility_profiles");
+            statement = conn.prepareStatement("SELECT facility_profiles.id, CONCAT('pool:', facility_profiles.pool, ', evening_entertainment:', facility_profiles.evening_entertainment, ', kids_club:', facility_profiles.kids_club, ', restaurant:', facility_profiles.restaurant) AS profile_string FROM facility_profiles");
             return statement.executeQuery();
         }
         catch(Exception e) {
