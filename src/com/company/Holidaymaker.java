@@ -98,7 +98,7 @@ public class Holidaymaker {
         // create booking
         int thisBookingId = -1;
         try {
-            statement = conn.prepareStatement("INSERT INTO bookings (start_date, end_date, customer) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            statement = conn.prepareStatement("INSERT INTO reservations (start_date, end_date, customer) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 
             statement.setDate(1, bookingStartDate);
             statement.setDate(2, bookingEndDate);
@@ -181,7 +181,7 @@ public class Holidaymaker {
             int roomId = Integer.parseInt(scanner.nextLine());
 
             try {
-                statement = conn.prepareStatement("INSERT INTO room_reservations (room, booking) VALUES (?, ?)");
+                statement = conn.prepareStatement("INSERT INTO room_reservations (room, reservation) VALUES (?, ?)");
                 statement.setInt(1, roomId);
                 statement.setInt(2, thisBookingId);
                 statement.executeUpdate();
@@ -199,7 +199,7 @@ public class Holidaymaker {
 
         // if no room reservations were made, delete booking
         try {
-            statement = conn.prepareStatement("SELECT COUNT(*) AS num_room_reservations FROM room_reservations WHERE booking=?");
+            statement = conn.prepareStatement("SELECT COUNT(*) AS num_room_reservations FROM room_reservations WHERE reservation=?");
             statement.setInt(1, thisBookingId);
             resultSet = statement.executeQuery();
             resultSet.next();
@@ -207,7 +207,7 @@ public class Holidaymaker {
             int num_room_reservations = resultSet.getInt("num_room_reservations");
 
             if(num_room_reservations == 0){
-                statement = conn.prepareStatement("DELETE FROM bookings WHERE id=?");
+                statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
                 statement.setInt(1, thisBookingId);
                 statement.executeUpdate();
                 System.out.println("(Deleted booking since no room reservations were made.)");
