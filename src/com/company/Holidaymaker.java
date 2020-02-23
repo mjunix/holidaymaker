@@ -1,6 +1,7 @@
 package com.company;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 public class Holidaymaker {
@@ -124,6 +125,11 @@ public class Holidaymaker {
                 System.out.println("Start date and end date of your booking...");
                 System.out.print("Enter start date (yyyy-mm-dd): ");
                 bookingStartDate = Date.valueOf(scanner.nextLine());
+
+                if(bookingStartDate.before(Date.valueOf(LocalDate.now()))) {
+                    System.out.println("ERROR: Start date cannot be in the past! Try again!");
+                    continue;
+                }
 
                 System.out.print("Enter end date (yyyy-mm-dd): ");
                 bookingEndDate = Date.valueOf(scanner.nextLine());
