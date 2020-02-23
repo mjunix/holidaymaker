@@ -1,8 +1,5 @@
 package com.company;
 
-// TODO: ta bort while-loopar?
-// TODO: lägg in start_date/end_date i room_reservation?
-
 import java.sql.*;
 import java.util.Scanner;
 
