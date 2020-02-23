@@ -220,7 +220,7 @@ public class Holidaymaker {
                 }
 
                 do {
-                    System.out.println(resultSet.getInt("id") + ". Room_number:" + resultSet.getInt("room_number") + " " + resultSet.getString("designation") + " " + resultSet.getInt("hotel"));
+                    System.out.println(resultSet.getInt("id") + ". Room_number:" + resultSet.getInt("room_number") + " Room_size:" + resultSet.getString("designation"));
                 } while (resultSet.next());
             }
             catch(Exception e) {
