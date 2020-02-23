@@ -47,6 +47,55 @@ public class Holidaymaker {
     }
 
     private void deleteReservation() {
+        int customerId = -1;
+
+        // find customer id
+        while(true) {
+            System.out.print("Enter email of customer or empty string to quit: ");
+            String email = scanner.nextLine().trim();
+
+            if(email.isBlank()) {
+                return;
+            }
+
+            customerId = findCustomerIdFromEmail(email);
+
+            if(customerId != -1) {
+                break;
+            }
+            else {
+                System.out.println("No customer found with that email! Try again!");
+            }
+        }
+
+        try {
+            statement = conn.prepareStatement("SELECT * FROM reservations WHERE customer=? AND start_date >= CURDATE()");
+            statement.setInt(1, customerId);
+            resultSet = statement.executeQuery();
+
+            if(!resultSet.next()) {
+                System.out.println("No reservations can be deleted for this user!");
+                return;
+            }
+
+            System.out.println("Reservations:");
+
+            do {
+                System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date"));
+            } while(resultSet.next());
+
+            System.out.print("Enter id of reservation to delete: ");
+
+            int reservationId = Integer.parseInt(scanner.nextLine());
+
+            statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
+            statement.setInt(1, reservationId);
+            statement.executeUpdate();
+            System.out.println("Deleted reservation");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void makeReservation() {
