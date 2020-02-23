@@ -350,7 +350,7 @@ public class Holidaymaker {
             int rows = statement.executeUpdate();
 
             if(rows == 1) {
-                System.out.println("Regristered customer successfully!");
+                System.out.println("Registered customer successfully!");
             }
         } catch(Exception e) {
             e.printStackTrace();
