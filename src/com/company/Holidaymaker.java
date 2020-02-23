@@ -261,11 +261,14 @@ public class Holidaymaker {
                 statement.setInt(1, thisBookingId);
                 statement.executeUpdate();
                 System.out.println("(Deleted booking since no room reservations were made.)");
+                return;
             }
         }
         catch(Exception e) {
             e.printStackTrace();
         }
+
+        System.out.println("Created reservation successfully!");
     }
 
     private ResultSet getAvailableRoomsInHotel(int hotelId, Date bookingStartDate, Date bookingEndDate, int roomSize) {
