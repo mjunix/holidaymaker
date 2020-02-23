@@ -207,6 +207,10 @@ public class Holidaymaker {
             System.out.println("\nRoom reservation...");
             int roomSize = getIntegerFromUser("How many people will stay in the room (or zero to quit): ");
 
+            if(roomSize == 0) {
+                break;
+            }
+
             System.out.println("Available rooms:");
             resultSet = getAvailableRoomsInHotel(hotelId, bookingStartDate, bookingEndDate, roomSize);
             try {
