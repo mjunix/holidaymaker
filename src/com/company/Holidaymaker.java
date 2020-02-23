@@ -315,27 +315,47 @@ public class Holidaymaker {
     private void registerCustomer() {
         // name
         System.out.print("Name: ");
-        String name = scanner.nextLine();
+        String name = scanner.nextLine().trim();
 
-        // email
-        System.out.print("Email: ");
-        String email = scanner.nextLine();
+        // email (must be unique)
+        String email = null;
+        while(true) {
+            System.out.print("Email: ");
+            email = scanner.nextLine().trim();
+
+            try {
+                statement = conn.prepareStatement("SELECT id FROM customers WHERE email=?");
+                statement.setString(1, email);
+                resultSet = statement.executeQuery();
+
+                if(resultSet.next()) {
+                    System.out.println("ERROR: A customer with that email already registered! Please use another email!");
+                    continue;
+                }
+                else {
+                    break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+        }
 
         // phone
         System.out.print("Phone: ");
-        String phone = scanner.nextLine();
+        String phone = scanner.nextLine().trim();
 
         // address
         System.out.print("Address: ");
-        String address = scanner.nextLine();
+        String address = scanner.nextLine().trim();
 
         // city
         System.out.print("City: ");
-        String city = scanner.nextLine();
+        String city = scanner.nextLine().trim();
 
         // country
         System.out.print("Country: ");
-        String country = scanner.nextLine();
+        String country = scanner.nextLine().trim();
 
         try {
             statement = conn.prepareStatement("INSERT INTO customers (name, email, phone, address, city, country) VALUES (?, ?, ?, ?, ?, ?)");
