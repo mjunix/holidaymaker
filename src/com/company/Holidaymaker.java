@@ -22,9 +22,8 @@ public class Holidaymaker {
             System.out.println("2. Make reservation");
             System.out.println("3. Delete reservation");
             System.out.println("0. Exit");
-            System.out.print("Choice: ");
 
-            int choice = Integer.parseInt(scanner.nextLine());
+            int choice = getIntegerFromUser("Choice: ");
 
             switch (choice) {
                 case 1:
@@ -82,9 +81,7 @@ public class Holidaymaker {
                 System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date"));
             } while(resultSet.next());
 
-            System.out.print("Enter id of reservation to delete: ");
-
-            int reservationId = Integer.parseInt(scanner.nextLine());
+            int reservationId = getIntegerFromUser("Enter id of reservation to delete: ");
 
             statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
             statement.setInt(1, reservationId);
@@ -175,8 +172,8 @@ public class Holidaymaker {
             while (resultSet.next()) {
                 System.out.println(resultSet.getInt("id") + ". " + resultSet.getString("profile_string"));
             }
-            System.out.print("Enter profile id: ");
-            facilityProfileId = Integer.parseInt(scanner.nextLine());
+
+            facilityProfileId = getIntegerFromUser("Enter profile id: ");
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -196,8 +193,7 @@ public class Holidaymaker {
                     System.out.println(resultSet.getInt("id") + ". " + resultSet.getString("name"));
                 }
 
-                System.out.print("Enter hotel id: ");
-                hotelId = Integer.parseInt(scanner.nextLine());
+                hotelId = getIntegerFromUser("Enter hotel id: ");
                 // TODO: check if hotelId is valid
             }
             catch(Exception e) {
@@ -209,8 +205,11 @@ public class Holidaymaker {
         // choose room
         while (true) {
             System.out.println("\nRoom reservation...");
-            System.out.print("How many people will stay in the room (or zero to quit): ");
-            int roomSize = Integer.parseInt(scanner.nextLine());
+            int roomSize = getIntegerFromUser("How many people will stay in the room (or zero to quit): ");
+
+            if(roomSize == 0) {
+                break;
+            }
 
             System.out.println("Available rooms:");
             resultSet = getAvailableRoomsInHotel(hotelId, bookingStartDate, bookingEndDate, roomSize);
@@ -221,7 +220,7 @@ public class Holidaymaker {
                 }
 
                 do {
-                    System.out.println(resultSet.getInt("id") + ". Room_number:" + resultSet.getInt("room_number") + " " + resultSet.getString("designation") + " " + resultSet.getInt("hotel"));
+                    System.out.println(resultSet.getInt("id") + ". Room_number:" + resultSet.getInt("room_number") + " Room_size:" + resultSet.getString("designation"));
                 } while (resultSet.next());
             }
             catch(Exception e) {
@@ -229,8 +228,7 @@ public class Holidaymaker {
                 return;
             }
 
-            System.out.print("Enter id of room to book: ");
-            int roomId = Integer.parseInt(scanner.nextLine());
+            int roomId = getIntegerFromUser("Enter id of room to book: ");
 
             try {
                 statement = conn.prepareStatement("INSERT INTO room_reservations (room, reservation) VALUES (?, ?)");
@@ -291,7 +289,7 @@ public class Holidaymaker {
 
     private ResultSet getAllHotelProfiles() {
         try {
-            statement = conn.prepareStatement("SELECT facility_profiles.id, CONCAT('pool:', facility_profiles.pool, ' evening_entertainment:', facility_profiles.evening_entertainment, ' kids_club:', facility_profiles.kids_club, ' restaurant:', facility_profiles.restaurant) AS profile_string FROM facility_profiles");
+            statement = conn.prepareStatement("SELECT facility_profiles.id, CONCAT('pool:', facility_profiles.pool, ', evening_entertainment:', facility_profiles.evening_entertainment, ', kids_club:', facility_profiles.kids_club, ', restaurant:', facility_profiles.restaurant) AS profile_string FROM facility_profiles");
             return statement.executeQuery();
         }
         catch(Exception e) {
@@ -317,27 +315,47 @@ public class Holidaymaker {
     private void registerCustomer() {
         // name
         System.out.print("Name: ");
-        String name = scanner.nextLine();
+        String name = scanner.nextLine().trim();
 
-        // email
-        System.out.print("Email: ");
-        String email = scanner.nextLine();
+        // email (must be unique)
+        String email = null;
+        while(true) {
+            System.out.print("Email: ");
+            email = scanner.nextLine().trim();
+
+            try {
+                statement = conn.prepareStatement("SELECT id FROM customers WHERE email=?");
+                statement.setString(1, email);
+                resultSet = statement.executeQuery();
+
+                if(resultSet.next()) {
+                    System.out.println("ERROR: A customer with that email already registered! Please use another email!");
+                    continue;
+                }
+                else {
+                    break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+        }
 
         // phone
         System.out.print("Phone: ");
-        String phone = scanner.nextLine();
+        String phone = scanner.nextLine().trim();
 
         // address
         System.out.print("Address: ");
-        String address = scanner.nextLine();
+        String address = scanner.nextLine().trim();
 
         // city
         System.out.print("City: ");
-        String city = scanner.nextLine();
+        String city = scanner.nextLine().trim();
 
         // country
         System.out.print("Country: ");
-        String country = scanner.nextLine();
+        String country = scanner.nextLine().trim();
 
         try {
             statement = conn.prepareStatement("INSERT INTO customers (name, email, phone, address, city, country) VALUES (?, ?, ?, ?, ?, ?)");
@@ -354,6 +372,19 @@ public class Holidaymaker {
             }
         } catch(Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private int getIntegerFromUser(String prompt) {
+        while(true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine();
+            try {
+                return Integer.parseInt(input);
+            }
+            catch(NumberFormatException e) {
+                System.out.println("ERROR: \"" + input  +"\" is not a valid integer! Try again!");
+            }
         }
     }
 }
