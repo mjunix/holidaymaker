@@ -43,52 +43,65 @@ public class Holidaymaker {
         }
     }
 
-    private void deleteReservation() {
-        int customerId = -1;
+    private void registerCustomer() {
+        // name
+        System.out.print("Name: ");
+        String name = scanner.nextLine().trim();
 
-        // find customer id
+        // email (must be unique)
+        String email = null;
         while(true) {
-            System.out.print("Enter email of customer or empty string to quit: ");
-            String email = scanner.nextLine().trim();
+            System.out.print("Email: ");
+            email = scanner.nextLine().trim();
 
-            if(email.isBlank()) {
+            try {
+                statement = conn.prepareStatement("SELECT id FROM customers WHERE email=?");
+                statement.setString(1, email);
+                resultSet = statement.executeQuery();
+
+                if(resultSet.next()) {
+                    System.out.println("ERROR: A customer with that email already registered! Please use another email!");
+                    continue;
+                }
+                else {
+                    break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
                 return;
             }
-
-            customerId = findCustomerIdFromEmail(email);
-
-            if(customerId != -1) {
-                break;
-            }
-            else {
-                System.out.println("No customer found with that email! Try again!");
-            }
         }
+
+        // phone
+        System.out.print("Phone: ");
+        String phone = scanner.nextLine().trim();
+
+        // address
+        System.out.print("Address: ");
+        String address = scanner.nextLine().trim();
+
+        // city
+        System.out.print("City: ");
+        String city = scanner.nextLine().trim();
+
+        // country
+        System.out.print("Country: ");
+        String country = scanner.nextLine().trim();
 
         try {
-            statement = conn.prepareStatement("SELECT * FROM reservations WHERE customer=? AND start_date >= CURDATE()");
-            statement.setInt(1, customerId);
-            resultSet = statement.executeQuery();
+            statement = conn.prepareStatement("INSERT INTO customers (name, email, phone, address, city, country) VALUES (?, ?, ?, ?, ?, ?)");
+            statement.setString(1, name);
+            statement.setString(2, email);
+            statement.setString(3, phone);
+            statement.setString(4, address);
+            statement.setString(5, city);
+            statement.setString(6, country);
+            int rows = statement.executeUpdate();
 
-            if(!resultSet.next()) {
-                System.out.println("No reservations can be deleted for this user!");
-                return;
+            if(rows == 1) {
+                System.out.println("Registered customer successfully!");
             }
-
-            System.out.println("Reservations:");
-
-            do {
-                System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date"));
-            } while(resultSet.next());
-
-            int reservationId = getIntegerFromUser("Enter id of reservation to delete: ");
-
-            statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
-            statement.setInt(1, reservationId);
-            statement.executeUpdate();
-            System.out.println("Deleted reservation");
-        }
-        catch (Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
@@ -183,23 +196,23 @@ public class Holidaymaker {
         int hotelId = -1;
 
         // choose hotel
-            try {
-                System.out.println("Hotels:");
-                statement = conn.prepareStatement("SELECT id, name FROM hotels WHERE facility_profile=?");
-                statement.setInt(1, facilityProfileId);
-                resultSet = statement.executeQuery();
+        try {
+            System.out.println("Hotels:");
+            statement = conn.prepareStatement("SELECT id, name FROM hotels WHERE facility_profile=?");
+            statement.setInt(1, facilityProfileId);
+            resultSet = statement.executeQuery();
 
-                while(resultSet.next()) {
-                    System.out.println(resultSet.getInt("id") + ". " + resultSet.getString("name"));
-                }
+            while(resultSet.next()) {
+                System.out.println(resultSet.getInt("id") + ". " + resultSet.getString("name"));
+            }
 
-                hotelId = getIntegerFromUser("Enter hotel id: ");
-                // TODO: check if hotelId is valid
-            }
-            catch(Exception e) {
-                e.printStackTrace();
-                return;
-            }
+            hotelId = getIntegerFromUser("Enter hotel id: ");
+            // TODO: check if hotelId is valid
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
 
         // choose room
@@ -271,6 +284,56 @@ public class Holidaymaker {
         System.out.println("Created reservation successfully!");
     }
 
+    private void deleteReservation() {
+        int customerId = -1;
+
+        // find customer id
+        while(true) {
+            System.out.print("Enter email of customer or empty string to quit: ");
+            String email = scanner.nextLine().trim();
+
+            if(email.isBlank()) {
+                return;
+            }
+
+            customerId = findCustomerIdFromEmail(email);
+
+            if(customerId != -1) {
+                break;
+            }
+            else {
+                System.out.println("No customer found with that email! Try again!");
+            }
+        }
+
+        try {
+            statement = conn.prepareStatement("SELECT * FROM reservations WHERE customer=? AND start_date >= CURDATE()");
+            statement.setInt(1, customerId);
+            resultSet = statement.executeQuery();
+
+            if(!resultSet.next()) {
+                System.out.println("No reservations can be deleted for this user!");
+                return;
+            }
+
+            System.out.println("Reservations:");
+
+            do {
+                System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date"));
+            } while(resultSet.next());
+
+            int reservationId = getIntegerFromUser("Enter id of reservation to delete: ");
+
+            statement = conn.prepareStatement("DELETE FROM reservations WHERE id=?");
+            statement.setInt(1, reservationId);
+            statement.executeUpdate();
+            System.out.println("Deleted reservation");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private ResultSet getAvailableRoomsInHotel(int hotelId, Date bookingStartDate, Date bookingEndDate, int roomSize) {
         try {
             statement = conn.prepareStatement(
@@ -312,69 +375,6 @@ public class Holidaymaker {
         catch(Exception e) {
             e.printStackTrace();
             return -1;
-        }
-    }
-
-    private void registerCustomer() {
-        // name
-        System.out.print("Name: ");
-        String name = scanner.nextLine().trim();
-
-        // email (must be unique)
-        String email = null;
-        while(true) {
-            System.out.print("Email: ");
-            email = scanner.nextLine().trim();
-
-            try {
-                statement = conn.prepareStatement("SELECT id FROM customers WHERE email=?");
-                statement.setString(1, email);
-                resultSet = statement.executeQuery();
-
-                if(resultSet.next()) {
-                    System.out.println("ERROR: A customer with that email already registered! Please use another email!");
-                    continue;
-                }
-                else {
-                    break;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-        }
-
-        // phone
-        System.out.print("Phone: ");
-        String phone = scanner.nextLine().trim();
-
-        // address
-        System.out.print("Address: ");
-        String address = scanner.nextLine().trim();
-
-        // city
-        System.out.print("City: ");
-        String city = scanner.nextLine().trim();
-
-        // country
-        System.out.print("Country: ");
-        String country = scanner.nextLine().trim();
-
-        try {
-            statement = conn.prepareStatement("INSERT INTO customers (name, email, phone, address, city, country) VALUES (?, ?, ?, ?, ?, ?)");
-            statement.setString(1, name);
-            statement.setString(2, email);
-            statement.setString(3, phone);
-            statement.setString(4, address);
-            statement.setString(5, city);
-            statement.setString(6, country);
-            int rows = statement.executeUpdate();
-
-            if(rows == 1) {
-                System.out.println("Registered customer successfully!");
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
         }
     }
 
