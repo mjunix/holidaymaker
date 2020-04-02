@@ -21,6 +21,7 @@ public class Holidaymaker {
             System.out.println("1. Register customer");
             System.out.println("2. Make reservation");
             System.out.println("3. Delete reservation");
+            System.out.println("4. Show reservations");
             System.out.println("0. Exit");
 
             int choice = getIntegerFromUser("Choice: ");
@@ -34,6 +35,9 @@ public class Holidaymaker {
                     break;
                 case 3:
                     deleteReservation();
+                    break;
+                case 4:
+                    showReservations();
                     break;
                 case 0:
                     return;
@@ -330,6 +334,22 @@ public class Holidaymaker {
             System.out.println("Deleted reservation");
         }
         catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showReservations() {
+        try {
+            statement = conn.prepareStatement(
+                    "SELECT reservations.id, reservations.start_date, reservations.end_date, customers.name FROM reservations INNER JOIN customers ON reservations.customer=customers.id ORDER BY reservations.id DESC");
+            resultSet = statement.executeQuery();
+            System.out.println("id  start_date   end_date   customer");
+            System.out.println("------------------------------------");
+            while(resultSet.next()) {
+                System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date") + " " + resultSet.getString("name"));
+            }
+        }
+        catch(Exception e) {
             e.printStackTrace();
         }
     }
