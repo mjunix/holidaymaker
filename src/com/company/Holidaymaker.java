@@ -22,6 +22,7 @@ public class Holidaymaker {
             System.out.println("2. Make reservation");
             System.out.println("3. Delete reservation");
             System.out.println("4. Show reservations");
+            System.out.println("5. Show customers");
             System.out.println("0. Exit");
 
             int choice = getIntegerFromUser("Choice: ");
@@ -38,6 +39,9 @@ public class Holidaymaker {
                     break;
                 case 4:
                     showReservations();
+                    break;
+                case 5:
+                    showCustomers();
                     break;
                 case 0:
                     return;
@@ -347,6 +351,32 @@ public class Holidaymaker {
             System.out.println("------------------------------------");
             while(resultSet.next()) {
                 System.out.println(resultSet.getInt("id") + ". " + resultSet.getDate("start_date") + " - " + resultSet.getDate("end_date") + " " + resultSet.getString("name"));
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showCustomers() {
+        try {
+            statement = conn.prepareStatement(
+                    "SELECT * FROM customers ORDER BY id DESC");
+            resultSet = statement.executeQuery();
+
+            System.out.println("id. name\temail\t\t\t\tphone\taddress\t\t\tcity\t\tcountry");
+            System.out.println("-----------------------------------------------------------------------------");
+
+            while(resultSet.next()) {
+                System.out.printf("%d. %s\t%s\t%s\t%s\t%s\t%s\n",
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("email"),
+                        resultSet.getString("phone"),
+                        resultSet.getString("address"),
+                        resultSet.getString("city"),
+                        resultSet.getString("country")
+                        );
             }
         }
         catch(Exception e) {
