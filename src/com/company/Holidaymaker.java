@@ -364,7 +364,7 @@ public class Holidaymaker {
                     "SELECT * FROM customers ORDER BY id DESC");
             resultSet = statement.executeQuery();
 
-            System.out.println("id. name\temail\t\t\t\tphone\taddress\t\t\tcity\t\tcountry");
+            System.out.println("id. name\temail\t\t\t\tphone\taddress\t\tcity\tcountry");
             System.out.println("-----------------------------------------------------------------------------");
 
             while(resultSet.next()) {
